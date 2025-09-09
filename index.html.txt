@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Ramo de flores amarillas</title>
+  <meta name="description" content="Ramo de flores amarillas generado por código, con frase personalizada.">
+  <style>
+    :root{
+      --bg:#fff8e6;
+      --accent:#d8a903;
+      --text:#3a2f00;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: radial-gradient(1200px 700px at 20% 10%, #fffbe8 0%, #fff3c8 35%, #ffeaa0 60%, #ffe38a 75%, #fee17f 85%, #ffe9a6 100%), var(--bg);
+      color:var(--text);
+      display:flex; align-items:center; justify-content:center;
+      overflow:hidden;
+    }
+    .wrap{
+      width:min(920px, 100vw);
+      height:min(95vh, 780px);
+      position:relative;
+      padding:16px;
+      display:flex; flex-direction:column; gap:8px;
+      justify-content:space-between; align-items:center;
+    }
+    h1{
+      margin:0;
+      font-weight:700;
+      letter-spacing:.2px;
+      text-align:center;
+      line-height:1.2;
+      text-wrap:balance;
+      text-shadow:0 2px 0 rgba(255,255,255,.5);
+    }
+    .frame{
+      width:100%;
+      flex:1;
+      border-radius:18px;
+      background:linear-gradient(180deg, rgba(255,255,255,.55), rgba(255,255,255,.25));
+      backdrop-filter: blur(6px);
+      box-shadow:
+        0 10px 30px rgba(0,0,0,.08),
+        inset 0 1px 0 rgba(255,255,255,.6);
+      position:relative;
+      overflow:hidden;
+    }
+    footer{
+      font-size:.9rem; opacity:.8; text-align:center;
+    }
+    .chip{
+      position:absolute; right:10px; bottom:10px;
+      font-size:.85rem; padding:6px 10px; border-radius:999px;
+      background:rgba(255,255,255,.7); backdrop-filter:blur(4px);
+      border:1px solid rgba(0,0,0,.06);
+    }
+    .btn{
+      display:inline-block; border:0; cursor:pointer;
+      padding:10px 14px; border-radius:10px; font-weight:600;
+      background:#ffcf33; color:#3a2f00;
+      box-shadow: 0 6px 16px rgba(216,169,3,.28);
+    }
+    .btn:active{transform:translateY(1px)}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1 id="title">🌼 Flores amarillas para vos 🌼</h1>
+    <div class="frame">
+      <!-- SVG dinámico -->
+      <svg id="bouquet" viewBox="0 0 900 650" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" aria-label="Ramo de flores amarillas"></svg>
+      <div class="chip">
+        <button class="btn" id="shareBtn" type="button">Compartir este mensaje</button>
+      </div>
+    </div>
+    <footer>
+      Tip: podés cambiar la frase con <code>?msg=Tu%20frase%20acá</code>
+    </footer>
+  </div>
+
+  <script>
+    // Utilidad: leer parámetros (?msg=...&seed=...)
+    const params = new URLSearchParams(location.search);
+    const msg = params.get('msg') || 'Que tu día florezca de alegría ✨';
+    const seedParam = params.get('seed');
+    const seed = Number.isFinite(Number(seedParam)) ? Number(seedParam) : Math.floor(Math.random()*1e9);
+
+    // Setear título
+    document.getElementById('title').textContent = msg;
+
+    // PRNG determinista para repetir el ramo con la misma seed
+    function mulberry32(a){
+      return function(){
+        let t = a += 0x6D2B79F5;
+        t = Math.imul(t ^ t >>> 15, t | 1);
+        t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+        return ((t ^ t >>> 14) >>> 0) / 4294967296;
+      }
+    }
+    const rnd = mulberry32(seed);
+
+    const svg = document.getElementById('bouquet');
+
+    // === Definiciones, filtros y gradientes para "look" más realista ===
+    const defs = document.createElementNS('http://www.w3.org/2000/svg','defs');
+
+    // Sombra suave
+    const flowerShadow = `
+      <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+        <feGaussianBlur in="SourceAlpha" stdDeviation="2.2" result="blur"/>
+        <feOffset dx="0" dy="2" result="off"/>
+        <feMerge>
+          <feMergeNode in="off"/>
+          <feMergeNode in="SourceGraphic"/>
+        </feMerge>
+      </filter>
+    `;
+
+    // Textura sutil (ruido) para quitar "plano"
+    const noise = `
+      <filter id="paper" x="0" y="0" width="100%" height="100%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch" result="turb"/>
+        <feColorMatrix type="saturate" values="0"/>
+        <feComponentTransfer>
+          <feFuncA type="linear" slope="0.05"/>
+        </feComponentTransfer>
+        <feBlend in2="SourceGraphic" mode="multiply"/>
+      </filter>
+    `;
+
+    // Gradientes para pétalos amarillos (centro más cálido)
+    function petalGradient(id, hueShift=0){
+      return `
+        <radialGradient id="${id}" cx="40%" cy="35%" r="70%">
+          <stop offset="0%" stop-color="hsl(${48+hueShift} 90% 90%)"/>
+          <stop offset="40%" stop-color="hsl(${48+hueShift} 92% 72%)"/>
+          <stop offset="100%" stop-color="hsl(${45+hueShift} 95% 54%)"/>
+        </radialGradient>
+      `;
+    }
+    // Centro de flor (disco)
+    function centerGradient(id){
+      return `
+        <radialGradient id="${id}" cx="50%" cy="50%" r="60%">
+          <stop offset="0%" stop-color="#5b3e00"/>
+          <stop offset="50%" stop-color="#7b5404"/>
+          <stop offset="100%" stop-color="#2e1f00"/>
+        </radialGradient>
+      `;
+    }
+    // Tallo / hojas
+    const stemGrad = `
+      <linearGradient id="stem" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#2a7a2a"/>
+        <stop offset="100%" stop-color="#155a18"/>
+      </linearGradient>
+    `;
+
+    defs.innerHTML = flowerShadow + noise
+      + petalGradient('petalA',0)
+      + petalGradient('petalB',-4)
+      + petalGradient('petalC',+6)
+      + centerGradient('centerA')
+      + stemGrad;
+
+    svg.appendChild(defs);
+
+    // Capa de textura
+    const texture = document.createElementNS('http://www.w3.org/2000/svg','rect');
+    texture.setAttribute('x','0'); texture.setAttribute('y','0');
+    texture.setAttribute('width','900'); texture.setAttribute('height','650');
+    texture.setAttribute('fill','transparent');
+    texture.setAttribute('filter','url(#paper)');
+    svg.appendChild(texture);
+
+    // Grupo raíz (para un leve balanceo del ramo)
+    const gRoot = document.createElementNS('http://www.w3.org/2000/svg','g');
+    svg.appendChild(gRoot);
+
+    // Funciones helpers
+    function create(el){ return document.createElementNS('http://www.w3.org/2000/svg', el); }
+    function R(min,max){ return min + (max-min)*rnd(); }
+    function RI(min,max){ return Math.floor(R(min,max+1)); }
+
+    // Dibujo de un pétalo (curva orgánica)
+    function drawPetal(r, width, length){
+      const path = create('path');
+      const ctrl1x = R(0.2,0.35), ctrl1y = R(0.05,0.25);
+      const ctrl2x = R(0.65,0.85), ctrl2y = R(0.05,0.25);
+      const tip = {x:0, y:-length};
+      const half = width/2;
+
+      const d = [
+        `M ${-0.5*width} 0`,
+        `C ${-half*ctrl1x} ${-length*ctrl1y} ${-half*ctrl2x} ${-length*ctrl2y} ${tip.x} ${tip.y}`,
+        `C ${half*ctrl2x} ${-length*ctrl2y} ${half*ctrl1x} ${-length*ctrl1y} ${0.5*width} 0`,
+        `Z`
+      ].join(' ');
+      path.setAttribute('d', d);
+      path.setAttribute('fill', r);
+      path.setAttribute('filter','url(#shadow)');
+      return path;
+    }
+
+    function drawLeaf(){
+      const leaf = create('path');
+      const w = R(18,32), l = R(80,120);
+      const curve = R(0.3,0.6);
+      const d = [
+        `M 0 0`,
+        `C ${-w*curve} ${-l*0.35} ${-w*0.7} ${-l*0.75} 0 ${-l}`,
+        `C ${w*0.7} ${-l*0.75} ${w*curve} ${-l*0.35} 0 0 Z`
+      ].join(' ');
+      leaf.setAttribute('d', d);
+      leaf.setAttribute('fill','url(#stem)');
+      leaf.setAttribute('opacity', R(.75,.95));
+      leaf.setAttribute('filter','url(#shadow)');
+      return leaf;
+    }
+
+    function drawFlower(x, y, scale=1, rotation=0){
+      const g = create('g');
+      g.setAttribute('transform', `translate(${x} ${y}) scale(${scale}) rotate(${rotation})`);
+
+      // Tallo
+      const stem = create('path');
+      const sx = R(-20,20);
+      const cx1 = R(sx-30, sx-10), cy1 = R(80,160);
+      const cx2 = R(sx+10, sx+30), cy2 = R(260,360);
+      const sy = R(380,460);
+      stem.setAttribute('d', `M ${sx} 0 C ${cx1} ${cy1} ${cx2} ${cy2} 0 ${sy}`);
+      stem.setAttribute('stroke','url(#stem)');
+      stem.setAttribute('stroke-width', R(3.2,4.5));
+      stem.setAttribute('fill','none');
+      stem.setAttribute('stroke-linecap','round');
+      g.appendChild(stem);
+
+      // Hojas
+      const leafCount = RI(1,3);
+      for(let i=0;i<leafCount;i++){
+        const L = drawLeaf();
+        const ly = R(120,260);
+        const lr = R(-35,35);
+        const ls = R(.6,1.1);
+        L.setAttribute('transform', `translate(${R(-18,18)} ${ly}) rotate(${lr}) scale(${ls})`);
+        g.appendChild(L);
+      }
+
+      // Cabeza de flor (círculo de pétalos en capas)
+      const head = create('g');
+      head.setAttribute('transform', `translate(0 0)`);
+      const layers = [
+        {n: RI(9,12), r:'url(#petalC)', len:R(85,110), wid:R(38,52), jitter:6},
+        {n: RI(8,10), r:'url(#petalB)', len:R(70,90),  wid:R(32,44), jitter:5},
+        {n: RI(7,9),  r:'url(#petalA)', len:R(55,70),  wid:R(26,34), jitter:4}
+      ];
+      let petalAngleOffset = R(0, 360);
+      layers.forEach((L,i)=>{
+        for(let k=0;k<L.n;k++){
+          const a = (360/L.n)*k + petalAngleOffset + R(-L.jitter, L.jitter);
+          const p = drawPetal(L.r, L.wid, L.len);
+          p.setAttribute('transform', `rotate(${a}) translate(0 ${R(-3,3)})`);
+          head.appendChild(p);
+        }
+        petalAngleOffset += R(8,18);
+      });
+
+      // Centro
+      const center = create('circle');
+      center.setAttribute('cx',0); center.setAttribute('cy',0);
+      center.setAttribute('r', R(16,24));
+      center.setAttribute('fill','url(#centerA)');
+      center.setAttribute('filter','url(#shadow)');
+      head.appendChild(center);
+
+      // Ligero brillo
+      const highlight = create('ellipse');
+      highlight.setAttribute('cx', -6);
+      highlight.setAttribute('cy', -6);
+      highlight.setAttribute('rx', R(8,12));
+      highlight.setAttribute('ry', R(5,8));
+      highlight.setAttribute('fill','rgba(255,255,255,.35)');
+      highlight.setAttribute('transform','rotate(-25)');
+      head.appendChild(highlight);
+
+      g.appendChild(head);
+      return g;
+    }
+
+    // Componer el ramo
+    const bouquet = create('g');
+    bouquet.setAttribute('transform', 'translate(450 200)');
+
+    // Cantidad de flores y distribución en "abanico"
+    const count = 9;
+    const spread = 36;
+    for(let i=0;i<count;i++){
+      const angle = -spread*0.5 + (spread/(count-1))*i + R(-4,4);
+      const dist = R(140, 200);
+      const x = Math.cos((angle-90)*Math.PI/180) * dist * R(.85,1.05);
+      const y = Math.sin((angle-90)*Math.PI/180) * dist * R(.85,1.05);
+      const s = R(.75, 1.15);
+      const r = R(-10,10);
+      bouquet.appendChild(drawFlower(x, y, s, r));
+    }
+
+    // Atadura del ramo
+    const tie = create('path');
+    tie.setAttribute('d','M -70 360 C -20 330, 20 330, 70 360 C 25 370, -25 370, -70 360 Z');
+    tie.setAttribute('fill','#cc8f00');
+    tie.setAttribute('opacity','.9');
+    tie.setAttribute('filter','url(#shadow)');
+    bouquet.appendChild(tie);
+
+    gRoot.appendChild(bouquet);
+
+    // Animación suave (mece el ramo)
+    let t0 = performance.now();
+    function animate(now){
+      const t = (now - t0)/1000;
+      const sway = Math.sin(t*0.7)*2.2;
+      gRoot.setAttribute('transform', `translate(0 ${Math.sin(t*0.9)*1.5}) rotate(${sway} 450 420)`);
+      requestAnimationFrame(animate);
+    }
+    requestAnimationFrame(animate);
+
+    // Botón "Compartir este mensaje" (actualiza la URL con msg y seed)
+    const shareBtn = document.getElementById('shareBtn');
+    shareBtn.addEventListener('click', async ()=>{
+      const base = location.origin + location.pathname;
+      const url = `${base}?msg=${encodeURIComponent(msg)}&seed=${seed}`;
+      if (navigator.share){
+        try { await navigator.share({title:'Flores amarillas', text: msg, url}); }
+        catch(e){}
+      }else{
+        navigator.clipboard?.writeText(url);
+        shareBtn.textContent = '¡Link copiado!';
+        setTimeout(()=>shareBtn.textContent='Compartir este mensaje', 1500);
+      }
+    });
+  </script>
+</body>
+</html>

@@ -17,12 +17,38 @@
       text-align: center;
       color: #333;
     }
-    img {
+
+    /* Caja de madera */
+    .caja {
+      width: 300px;
+      height: 200px;
+      background-image: url('caja_madera.jpg'); /* Ruta de tu imagen de la caja de madera */
+      background-size: cover;
+      background-position: center;
+      cursor: pointer;
+      border-radius: 15px;
+      box-shadow: 0px 5px 15px rgba(0,0,0,0.2);
+      transition: transform 0.3s ease;
+    }
+
+    .caja:hover {
+      transform: scale(1.05);
+    }
+
+    /* Contenedor de flores */
+    .flores {
+      display: none; /* Inicialmente oculto */
+      margin-top: 20px;
+    }
+
+    .flores img {
       max-width: 90%;
       height: auto;
       border-radius: 15px;
       box-shadow: 0px 5px 15px rgba(0,0,0,0.2);
+      transition: opacity 0.5s ease-in-out;
     }
+
     h1 {
       margin-top: 20px;
       font-size: 1.8rem;
@@ -31,11 +57,30 @@
   </style>
 </head>
 <body>
-  <!-- Imagen de flores -->
-  <img src="flores.jpg" alt="Ramo de flores amarillas">
-  
+
+  <!-- Imagen de la caja de madera -->
+  <div class="caja" onclick="mostrarFlores()"></div>
+
+  <!-- Flores que se mostrarán después de hacer clic -->
+  <div class="flores" id="flores">
+    <img src="flores.jpg" alt="Flores Amarillas 1">
+    <img src="flores.jpg" alt="Flores Amarillas 2">
+    <img src="flores.jpg" alt="Flores Amarillas 3">
+  </div>
+
   <!-- Frase -->
   <h1>Aunque esté muy lejos, quería regalarte flores a mi manera, amor.❤️</h1>
+
+  <script>
+    function mostrarFlores() {
+      const flores = document.getElementById("flores");
+      flores.style.display = "block"; // Mostrar las flores
+      flores.style.opacity = "0"; // Inicialmente invisible para el fade-in
+      setTimeout(() => {
+        flores.style.opacity = "1"; // Hacer que las flores aparezcan con un efecto de fade-in
+      }, 100);
+    }
+  </script>
+
 </body>
 </html>
-

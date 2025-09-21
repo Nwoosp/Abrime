@@ -16,6 +16,7 @@
       font-family: "Georgia", serif;
       text-align: center;
       color: #333;
+      transition: justify-content 0.8s ease;
     }
 
     /* Caja */
@@ -52,7 +53,7 @@
 
     .flores img {
       width: 80%;
-      max-width: 280px; /* mismo tamaño para todas */
+      max-width: 280px; /* tamaño moderado para celular */
       height: auto;
       border-radius: 15px;
       box-shadow: 0px 5px 15px rgba(0,0,0,0.2);
@@ -60,7 +61,7 @@
       transform: translateY(20px);
       transition: opacity 1s ease, transform 1s ease;
       margin: 10px 0;
-      object-fit: cover; /* asegura que se adapten bien */
+      object-fit: cover;
     }
 
     .flores img.visible {
@@ -98,7 +99,7 @@
   </div>
 
   <!-- Frase -->
-  <h1 id="frase">Aunque esté muy lejos, quería regalarte flores a mi manera, amor.❤️</h1>
+  <h1 id="frase">No podia decidirme que flor regalarte, asi que opte por darte las que más me recuerdan a vos!❤️</h1>
 
   <script>
     function abrirCaja() {
@@ -106,10 +107,13 @@
       const flores = document.getElementById("flores");
       const frase = document.getElementById("frase");
 
-      // Animar la tapa
+      // Abrir tapa
       tapa.classList.add("abierta");
 
-      // Cuando termina de abrirse, mostrar flores
+      // Reacomodar body (ya no centrado verticalmente, sino arriba para scroll natural)
+      document.body.style.justifyContent = "flex-start";
+
+      // Mostrar flores
       setTimeout(() => {
         flores.classList.add("mostrar");
 
@@ -117,19 +121,20 @@
         imgs.forEach((img, i) => {
           setTimeout(() => {
             img.classList.add("visible");
+            img.scrollIntoView({ behavior: "smooth", block: "center" }); // scroll automático
 
             // Mostrar frase después de la última flor
             if (i === imgs.length - 1) {
               setTimeout(() => {
                 frase.classList.add("visible");
+                frase.scrollIntoView({ behavior: "smooth", block: "center" });
               }, 800);
             }
-          }, i * 800);
+          }, i * 1200);
         });
-      }, 1000); // tiempo animación de la tapa
+      }, 1000);
     }
   </script>
 
 </body>
 </html>
-

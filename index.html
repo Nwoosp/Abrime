@@ -22,7 +22,7 @@
     .caja {
       width: 300px;
       height: 200px;
-      background-image: url('caja_madera.jpg'); /* Ruta de tu imagen de la caja de madera */
+      background-image: url('caja_madera.png');
       background-size: cover;
       background-position: center;
       cursor: pointer;
@@ -37,8 +37,15 @@
 
     /* Contenedor de flores */
     .flores {
-      display: none; /* Inicialmente oculto */
+      visibility: hidden;
+      opacity: 0;
       margin-top: 20px;
+      transition: opacity 1s ease-in-out;
+    }
+
+    .flores.mostrar {
+      visibility: visible;
+      opacity: 1;
     }
 
     .flores img {
@@ -46,13 +53,28 @@
       height: auto;
       border-radius: 15px;
       box-shadow: 0px 5px 15px rgba(0,0,0,0.2);
-      transition: opacity 0.5s ease-in-out;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 1s ease, transform 1s ease;
+      margin: 10px 0;
     }
 
+    .flores img.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Frase */
     h1 {
       margin-top: 20px;
       font-size: 1.8rem;
       color: #d4af37;
+      opacity: 0;
+      transition: opacity 1.5s ease;
+    }
+
+    h1.visible {
+      opacity: 1;
     }
   </style>
 </head>
@@ -61,24 +83,37 @@
   <!-- Imagen de la caja de madera -->
   <div class="caja" onclick="mostrarFlores()"></div>
 
-  <!-- Flores que se mostrarán después de hacer clic -->
+  <!-- Flores -->
   <div class="flores" id="flores">
     <img src="flores.jpg" alt="Flores Amarillas 1">
-    <img src="flores.jpg" alt="Flores Amarillas 2">
-    <img src="flores.jpg" alt="Flores Amarillas 3">
+    <img src="flores2.jpg" alt="Flores Amarillas 2">
+    <img src="flores3.jpg" alt="Flores Amarillas 3">
   </div>
 
   <!-- Frase -->
-  <h1>Aunque esté muy lejos, quería regalarte flores a mi manera, amor.❤️</h1>
+  <h1 id="frase">No podia decidirme que flor regalarte, asi que opte por darte las que más me recuerdan a vos!❤️</h1>
 
   <script>
     function mostrarFlores() {
       const flores = document.getElementById("flores");
-      flores.style.display = "block"; // Mostrar las flores
-      flores.style.opacity = "0"; // Inicialmente invisible para el fade-in
-      setTimeout(() => {
-        flores.style.opacity = "1"; // Hacer que las flores aparezcan con un efecto de fade-in
-      }, 100);
+      const frase = document.getElementById("frase");
+
+      flores.classList.add("mostrar");
+
+      // Animación progresiva de cada flor
+      const imgs = flores.querySelectorAll("img");
+      imgs.forEach((img, i) => {
+        setTimeout(() => {
+          img.classList.add("visible");
+
+          // Cuando aparece la última flor, mostrar la frase
+          if (i === imgs.length - 1) {
+            setTimeout(() => {
+              frase.classList.add("visible");
+            }, 800);
+          }
+        }, i * 700);
+      });
     }
   </script>
 
